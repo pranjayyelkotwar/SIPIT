@@ -20,22 +20,16 @@ Transformer language models mapping discrete input sequences to continuous hidde
 
 This repository also includes two baseline methods; **BruteForce** (exhaustive vocabulary search) and **HardPrompts** (joint sequence optimization).
 
-<!-- <div align="center">
-<img src="figures/teaser.png" alt="The map from prompts to latent space is injective. SIPIT inverts it." width="400">
-<br>
-<sub>The map from prompts to latent space is injective. SIPIT inverts it.</sub>
-</div>
-
-<br> -->
-
-<div align="center">
-<table>
+<table align="center">
   <tr>
-    <td align="center"><img src="figures/real_analytic_fns.png" width="360"><br><sub><b>Real-analyticity.</b> Zero sets of real-analytic functions form thin curves (measure zero) rather than regions of positive measure.</sub></td>
-    <td align="center"><img src="figures/combined_swarm_boxplot.png" width="480"><br><sub><b>Collision statistics.</b> Minimum distances between last-token hidden states across models and layers remain far above the collision threshold 10<sup>−6</sup>.</sub></td>
+    <td valign="middle" align="center"><img src="figures/real_analytic_fns.png" width="340"></td>
+    <td valign="middle" align="center"><img src="figures/combined_swarm_boxplot.png" width="480"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Left:</b> Real-analyticity of transformer components.</sub></td>
+    <td align="center"><sub><b>Right:</b> Collision statistics across models and layers.</sub></td>
   </tr>
 </table>
-</div>
 
 ## Setup
 
