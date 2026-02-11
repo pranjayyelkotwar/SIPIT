@@ -20,16 +20,11 @@ Transformer language models mapping discrete input sequences to continuous hidde
 
 This repository also includes two baseline methods; **BruteForce** (exhaustive vocabulary search) and **HardPrompts** (joint sequence optimization).
 
-<table align="center">
-  <tr>
-    <td valign="middle" align="center"><img src="figures/real_analytic_fns.png" width="340"></td>
-    <td valign="middle" align="center"><img src="figures/combined_swarm_boxplot.png" width="480"></td>
-  </tr>
-  <tr>
-    <td align="center"><sub><b>Left:</b> Real-analyticity of transformer components.</sub></td>
-    <td align="center"><sub><b>Right:</b> Collision statistics across models and layers.</sub></td>
-  </tr>
-</table>
+<p align="center">
+  <img src="figures/real_analytic_fns.png" height="240" align="middle">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="figures/combined_swarm_boxplot.png" height="120" align="middle">
+  <br>
+  <sub>Real-analytic structure ensures collisions are measure-zero events (left); empirical collision tests on six models confirm no collisions occur in practice (right).</sub>
+</p>
 
 ## Setup
 
