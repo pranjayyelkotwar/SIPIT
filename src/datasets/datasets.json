@@ -1,0 +1,22 @@
+{
+    "wikipedia": {
+        "args": ["wikimedia/wikipedia", "20231101.en"],
+        "num_samples": 3,
+        "text_column": "text"
+    },
+    "colossal_clean_crawled_corpus": {
+        "args": ["allenai/c4", "en"],
+        "num_samples": 3,
+        "text_column": "text"
+    },
+    "arxiv_pile": {
+        "args": ["timaeus/pile-arxiv"],
+        "num_samples": 2,
+        "text_column": "text"
+    },
+    "github_python": {
+        "args": ["angie-chen55/python-github-code"],
+        "num_samples": 2,
+        "text_column": "code"
+    }
+}
