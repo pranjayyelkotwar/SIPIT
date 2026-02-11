@@ -52,6 +52,10 @@ sipit \
     --prompt "$prompt"
 
 method="HardPrompts"
+# Using:
+# --vocab-scale-factor 7250 
+# --scheduler 
+# works much better for HardPrompts
 sipit \
     --command invert-single \
     --method $method \

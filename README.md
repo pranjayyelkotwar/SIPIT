@@ -1,13 +1,41 @@
-# SIPIT
+<div align="center">
 
-Official implementation of **SIPIT** from the paper:
+# Language Models are Injective and Hence Invertible
 
-> **Language Models are Injective and Hence Invertible**
-> ICLR 2026
+### Official code for **S**equential **I**nverse **P**rompt via **IT**erative updates (**SIPIT**) - the first algorithm that provably and efficiently recovers the exact input text from a model's hidden states.
 
-SIPIT is an algorithm for exact prompt inversion on causal language models. Given access to the hidden states at any intermediate layer of a transformer, SIPIT recovers the original input tokens by alternating between continuous gradient-based optimization and discrete projection onto the vocabulary.
+[![arXiv](https://img.shields.io/badge/arXiv-2510.15511-b31b1b?logo=arxiv&logoColor=white)](https://arxiv.org/abs/2510.15511)
+[![Conference](https://img.shields.io/badge/ICLR-2026-blue)](https://iclr.cc/)
+[![GitHub stars](https://img.shields.io/github/stars/giorgosnikolaou/SIPIT?style=social)](https://github.com/giorgosnikolaou/SIPIT)
+[![Repo Size](https://img.shields.io/github/repo-size/giorgosnikolaou/SIPIT?style=social)](https://github.com/giorgosnikolaou/SIPIT)
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.8-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-This repository also includes two baseline methods — **BruteForce** (exhaustive vocabulary search) and **HardPrompts** (joint sequence optimization).
+</div>
+
+---
+
+Transformer language models mapping discrete input sequences to continuous hidden representations are **almost-surely injective**, different prompts yield different hidden states for essentially all parameter settings. SIPIT operationalizes this: it reconstructs the **exact** input tokens from intermediate activations via alternating continuous gradient descent and discrete vocabulary projection, with provable **linear-time** guarantees.
+
+This repository also includes two baseline methods; **BruteForce** (exhaustive vocabulary search) and **HardPrompts** (joint sequence optimization).
+
+<!-- <div align="center">
+<img src="figures/teaser.png" alt="The map from prompts to latent space is injective. SIPIT inverts it." width="400">
+<br>
+<sub>The map from prompts to latent space is injective. SIPIT inverts it.</sub>
+</div>
+
+<br> -->
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center"><img src="figures/real_analytic_fns.png" width="360"><br><sub><b>Real-analyticity.</b> Zero sets of real-analytic functions form thin curves (measure zero) rather than regions of positive measure.</sub></td>
+    <td align="center"><img src="figures/combined_swarm_boxplot.png" width="480"><br><sub><b>Collision statistics.</b> Minimum distances between last-token hidden states across models and layers remain far above the collision threshold 10<sup>−6</sup>.</sub></td>
+  </tr>
+</table>
+</div>
 
 ## Setup
 

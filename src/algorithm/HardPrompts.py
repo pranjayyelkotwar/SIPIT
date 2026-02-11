@@ -36,7 +36,7 @@ class HardPrompts(InversionAlgorithm):
         iterative_target: bool = False,
         use_scheduler: bool = True,
         projection_iters_base: int = 50,
-        vocab_scale_factor: int = 25_000,
+        vocab_scale_factor: int = 7_250,
         n_tokens_scale_factor: int = 4,
         **kwargs
     ):
