@@ -5,9 +5,9 @@
 ### Official code for **S**equential **I**nverse **P**rompt via **IT**erative updates (**SIPIT**) - the first algorithm that provably and efficiently recovers the exact input text from a model's hidden states.
 
 [![arXiv](https://img.shields.io/badge/arXiv-2510.15511-b31b1b?logo=arxiv&logoColor=white)](https://arxiv.org/abs/2510.15511)
-[![Conference](https://img.shields.io/badge/ICLR-2026-blue)](https://iclr.cc/)
-[![GitHub stars](https://img.shields.io/github/stars/giorgosnikolaou/SIPIT?style=social?cache_seconds=0)](https://github.com/giorgosnikolaou/SIPIT)
-[![Repo Size](https://img.shields.io/github/repo-size/giorgosnikolaou/SIPIT?style=social?cache_seconds=0)](https://github.com/giorgosnikolaou/SIPIT)
+[![Conference](https://img.shields.io/badge/ICLR-2026-blue?logo=gitbook&logoColor=white)](https://iclr.cc/)
+[![GitHub stars](https://img.shields.io/github/stars/giorgosnikolaou/SIPIT?style=flat&logo=github&logoColor=white)](https://github.com/giorgosnikolaou/SIPIT)
+[![Repo Size](https://img.shields.io/github/repo-size/giorgosnikolaou/SIPIT?logo=github&logoColor=white)](https://github.com/giorgosnikolaou/SIPIT)
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.8-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
