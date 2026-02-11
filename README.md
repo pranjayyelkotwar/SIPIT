@@ -109,7 +109,7 @@ pip install -e ".[test]"
 pytest
 ```
 
-Tests use GPT-2 and cover exact inversion (SIPIT, BruteForce), algorithm completion (HardPrompts), dataset creation, and end-to-end dataset inversion. Add new test files to the `tests/` directory.
+Tests use GPT-2 and cover exact inversion (SIPIT, BruteForce), approximate inversion (HardPrompts), dataset creation, and end-to-end dataset inversion. Add new test files to the `tests/` directory.
 
 ## Citation
 
