@@ -1,18 +1,31 @@
+import os
+
 import torch
+from dotenv import load_dotenv
 
 from src.algorithm.SIPIT import SIPIT
 from src.utils.model import setup
 
-MODEL_ID = "meta-llama/Meta-Llama-3-8B"  # or exact model that produced the tensor
-LAYER_IDX = 22
-STEP_SIZE = 1.0
-TARGET_PATH = "activations_l22_idx6573.pt"
+load_dotenv()
 
-model, tokenizer, model_name, layer_idx = setup(
-    model_id=MODEL_ID,
-    precision=16,
-    layer_idx=LAYER_IDX,
-)
+MODEL_ID = os.getenv("MODEL_ID", "meta-llama/Meta-Llama-3-8B")  # exact model that produced the tensor
+LAYER_IDX = int(os.getenv("LAYER_IDX", "22"))
+STEP_SIZE = float(os.getenv("STEP_SIZE", "1.0"))
+TARGET_PATH = os.getenv("TARGET_PATH", "activations_l22_idx6573.pt")
+SPECIAL_START_TOKEN = os.getenv("SPECIAL_START_TOKEN")
+
+try:
+    model, tokenizer, model_name, layer_idx = setup(
+        model_id=MODEL_ID,
+        precision=16,
+        layer_idx=LAYER_IDX,
+    )
+except OSError as exc:
+    raise SystemExit(
+        f"Failed to load model '{MODEL_ID}'. If this is a gated Hugging Face repo, "
+        "authenticate first with `huggingface-cli login` or set `HF_TOKEN` in your `.env` file. "
+        "If the activations were produced by a different model, update `MODEL_ID` accordingly."
+    ) from exc
 
 target_hidden_states = torch.load(TARGET_PATH, map_location="cpu")
 
@@ -23,7 +36,7 @@ if target_hidden_states.dim() == 3:
 algo = SIPIT(
     log_dir="logs",
     log_name=None,
-    special_start_token_id=None,  # set this only if the captured activations assume an extra BOS token
+    special_start_token_id=int(SPECIAL_START_TOKEN) if SPECIAL_START_TOKEN is not None else None,
 )
 
 inversion_time, recovered_ids, timesteps, times = algo.find_prompt(
