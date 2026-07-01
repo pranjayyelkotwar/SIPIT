@@ -54,8 +54,7 @@ sipit \
     --method $method \
     -i data/SIPIT-Collection/gpt2 \
     -o data/experiments/llama_collection.csv \
-    --model-id "meta-llama/Llama-3.1-8B" \
-    --special-start-token 128000 \
+    --model-id "meta-llama/Meta-Llama-3-8B" \
     --seed $seed \
     --layer-idx $layer_idx \
     --precision $precision \
@@ -92,8 +91,7 @@ sipit \
     --method $method \
     -i data/SIPIT-Random \
     -o data/experiments/llama_random.csv \
-    --model-id "meta-llama/Llama-3.1-8B" \
-    --special-start-token 128000 \
+    --model-id "meta-llama/Meta-Llama-3-8B" \
     --seed $seed \
     --layer-idx $layer_idx \
     --precision $precision \

@@ -127,6 +127,7 @@ def replace_last_norm(model_id: str, model: PreTrainedModel):
         
         'microsoft/Phi-4-mini-instruct': 'model.norm',
         'mistralai/Mistral-7B-v0.1': 'model.norm',
+        'meta-llama/Meta-Llama-3-8B': 'model.norm',
         'meta-llama/Llama-3.1-8B': 'model.norm',
         'locuslab/tofu_ft_llama2-7b': 'model.norm',
 

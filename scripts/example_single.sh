@@ -32,8 +32,7 @@ sipit \
 sipit \
     --command invert-single \
     --method $method \
-    --model-id "meta-llama/Llama-3.1-8B" \
-    --special-start-token 128000 \
+    --model-id "meta-llama/Meta-Llama-3-8B" \
     --seed $seed \
     --layer-idx $layer_idx \
     --precision $precision \

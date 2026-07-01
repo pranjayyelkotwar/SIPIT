@@ -20,7 +20,7 @@ SEED = 1234
 MODEL_CONFIGS = [
     ('openai-community/gpt2', None),
     ('mistralai/Mistral-7B-v0.1', None),
-    ('meta-llama/Llama-3.1-8B', 128000),
+    ('meta-llama/Meta-Llama-3-8B', 128000),
 ]
 
 

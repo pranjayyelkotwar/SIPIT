@@ -47,6 +47,14 @@ inversion_time, recovered_ids, timesteps, times = algo.find_prompt(
     step_size=STEP_SIZE,
 )
 
+if any(x is None for x in (inversion_time, recovered_ids, timesteps, times)):
+    raise SystemExit(
+        "Prompt inversion failed or diverged. "
+        "The usual causes are: TARGET_PATH was generated from a different MODEL_ID or layer_idx, "
+        "the activations include a special start token but SPECIAL_START_TOKEN was not set, "
+        "or STEP_SIZE is too large for this model/target."
+    )
+
 print("Recovered ids:", recovered_ids)
 print("Recovered text:")
 print(tokenizer.decode(recovered_ids, skip_special_tokens=False))

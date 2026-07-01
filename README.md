@@ -96,7 +96,7 @@ sipit \
 | `--layer-idx` | Layer to invert (`-1` = last) | `-1` |
 | `--precision` | Weight precision: `4`, `8`, `16`, or `32` bit | `32` |
 | `--step-size` | Step Size | `1.0` |
-| `--special-start-token` | BOS token ID (needed for e.g. Llama-3.1) | `None` |
+| `--special-start-token` | BOS token ID (needed only if your captured activations included it) | `None` |
 
 See `scripts/` for more complete examples.
 
