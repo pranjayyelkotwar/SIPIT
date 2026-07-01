@@ -93,8 +93,9 @@ class InversionAlgorithm:
         rtol: float = 1e-5, 
         atol: float = 1e-5
     ):
+        device = x.device
         x = x.float()
-        y = y.float()
+        y = y.to(device=device, dtype=torch.float32)
         return torch.allclose(
             x, y,
             rtol=rtol,
