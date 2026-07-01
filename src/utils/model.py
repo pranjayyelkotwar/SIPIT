@@ -166,8 +166,16 @@ def continuous_grad_and_discrete_verify(
         require_grad=False
     )[-1]
 
-    loss_cont = torch.nn.functional.mse_loss(cont_hidden_states, target_hidden_states, reduction='mean')
-    loss_disc = torch.nn.functional.mse_loss(disc_hidden_states, target_hidden_states, reduction='mean')    
+    loss_cont = torch.nn.functional.mse_loss(
+        cont_hidden_states.float(),
+        target_hidden_states.float(),
+        reduction='mean'
+    )
+    loss_disc = torch.nn.functional.mse_loss(
+        disc_hidden_states.float(),
+        target_hidden_states.float(),
+        reduction='mean'
+    )
     loss_cont.backward()
 
     return (
@@ -195,7 +203,11 @@ def continuous_grad_matrix(
         require_grad=True
     )
 
-    loss_cont = torch.nn.functional.mse_loss(cont_hidden_states, target_hidden_states, reduction='mean')
+    loss_cont = torch.nn.functional.mse_loss(
+        cont_hidden_states.float(),
+        target_hidden_states.float(),
+        reduction='mean'
+    )
     loss_cont.backward()
 
     return (
