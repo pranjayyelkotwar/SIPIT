@@ -93,6 +93,8 @@ class InversionAlgorithm:
         rtol: float = 1e-5, 
         atol: float = 1e-5
     ):
+        x = x.float()
+        y = y.float()
         return torch.allclose(
             x, y,
             rtol=rtol,
