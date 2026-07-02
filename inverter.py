@@ -1,8 +1,11 @@
 import os
+import argparse
 
 import torch
 from dotenv import load_dotenv
 
+from src.algorithm.BruteForce import BruteForce
+from src.algorithm.HardPrompts import HardPrompts
 from src.algorithm.SIPIT import SIPIT
 from src.utils.model import setup
 
@@ -13,6 +16,21 @@ LAYER_IDX = int(os.getenv("LAYER_IDX", "22"))
 STEP_SIZE = float(os.getenv("STEP_SIZE", "1.0"))
 TARGET_PATH = os.getenv("TARGET_PATH", "activations_l22_idx6573.pt")
 SPECIAL_START_TOKEN = os.getenv("SPECIAL_START_TOKEN")
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--method",
+        type=str,
+        default="HardPrompts",
+        choices=["SIPIT", "BruteForce", "HardPrompts"],
+        help="Inversion method to use (default: HardPrompts).",
+    )
+    return parser.parse_args()
+
+
+args = parse_args()
 
 try:
     model, tokenizer, model_name, layer_idx = setup(
@@ -33,7 +51,13 @@ target_hidden_states = torch.load(TARGET_PATH, map_location="cpu")
 if target_hidden_states.dim() == 3:
     target_hidden_states = target_hidden_states.squeeze(0)
 
-algo = SIPIT(
+algo_cls = {
+    "SIPIT": SIPIT,
+    "BruteForce": BruteForce,
+    "HardPrompts": HardPrompts,
+}[args.method]
+
+algo = algo_cls(
     log_dir="logs",
     log_name=None,
     special_start_token_id=int(SPECIAL_START_TOKEN) if SPECIAL_START_TOKEN is not None else None,
