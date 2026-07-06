@@ -16,6 +16,11 @@ def build_parser():
 
 
 def _load_tensor_payload(input_path: Path) -> tuple[torch.Tensor, dict]:
+    def _normalize_hidden_states(hidden_states: torch.Tensor) -> torch.Tensor:
+        if hidden_states.dim() == 3 and hidden_states.size(0) == 1:
+            return hidden_states.squeeze(0)
+        return hidden_states
+
     if input_path.is_dir():
         manifest_path = input_path / 'manifest.json'
         if not manifest_path.exists():
@@ -31,16 +36,18 @@ def _load_tensor_payload(input_path: Path) -> tuple[torch.Tensor, dict]:
         first_artifact = input_path / str(artifacts[0]['file'])
         payload = torch.load(first_artifact, map_location='cpu')
         if isinstance(payload, dict) and 'hidden_states' in payload:
-            return payload['hidden_states'], payload
+            hidden_states = _normalize_hidden_states(payload['hidden_states'])
+            return hidden_states, payload
         if torch.is_tensor(payload):
-            return payload, {'file': str(first_artifact)}
+            return _normalize_hidden_states(payload), {'file': str(first_artifact)}
         raise TypeError(f'Unsupported tensor payload in {first_artifact}')
 
     payload = torch.load(input_path, map_location='cpu')
     if isinstance(payload, dict) and 'hidden_states' in payload:
-        return payload['hidden_states'], payload
+        hidden_states = _normalize_hidden_states(payload['hidden_states'])
+        return hidden_states, payload
     if torch.is_tensor(payload):
-        return payload, {'file': str(input_path)}
+        return _normalize_hidden_states(payload), {'file': str(input_path)}
     raise TypeError(f'Unsupported tensor payload in {input_path}')
 
 

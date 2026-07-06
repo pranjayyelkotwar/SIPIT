@@ -42,6 +42,8 @@ def _capture_prompt(
         require_grad=False,
         add_special_tokens=False,
     )
+    if hidden_states.dim() == 3 and hidden_states.size(0) == 1:
+        hidden_states = hidden_states.squeeze(0)
     encoded = tokenizer(
         prompt,
         add_special_tokens=False,
