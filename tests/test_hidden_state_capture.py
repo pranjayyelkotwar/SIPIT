@@ -2,7 +2,7 @@ from pathlib import Path
 
 import torch
 
-from src.commands import capture_hidden_state
+from src.commands import capture_hidden_state, invert_hidden_state
 from src.datasets.dataset import DatasetCollection, TokenizedDataset
 
 
@@ -104,3 +104,34 @@ class TestHiddenStateCaptureDataset:
         payload = _load_tensor_artifact(tensor_files[0])
         assert payload['kind'] == 'dataset-sample'
         assert payload['hidden_states'].ndim == 2
+
+
+class TestHiddenStateInversion:
+    def test_round_trip_prompt_tensor(self, tmp_data_dir, gpt2):
+        capture_parser = capture_hidden_state.build_parser()
+        capture_dir = tmp_data_dir / 'capture'
+        prompt = 'Hello world'
+        capture_args = capture_parser.parse_args([
+            '--model-id', 'openai-community/gpt2',
+            '--layer-idx', '-1',
+            '--output', str(capture_dir),
+            '--prompt', prompt,
+        ])
+        capture_hidden_state.run(capture_args)
+
+        tensor_path = capture_dir / 'tensors' / 'prompt.pt'
+        output_path = tmp_data_dir / 'recovered.txt'
+
+        parser = invert_hidden_state.build_parser()
+        args = parser.parse_args([
+            '--method', 'SIPIT',
+            '--model-id', 'openai-community/gpt2',
+            '--layer-idx', '-1',
+            '--output', str(output_path),
+            '--input', str(tensor_path),
+        ])
+        ret = invert_hidden_state.run(args)
+
+        assert ret == 0
+        assert output_path.exists()
+        assert output_path.read_text(encoding='utf-8') == prompt

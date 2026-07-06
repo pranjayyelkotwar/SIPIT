@@ -278,3 +278,21 @@ class HiddenStateCaptureParser(ArgumentParser):
             type=str,
             help='Path to a saved dataset collection directory.'
         )
+
+
+class HiddenStateInversionParser(BaseInversionParser):
+    def __init__(self, description='Arguments for inverting a saved hidden-state tensor.'):
+        super().__init__(description=description)
+
+        self.add_argument(
+            '-i', '--input',
+            type=str,
+            required=True,
+            help='Path to a prompt tensor file or capture bundle directory.'
+        )
+        self.add_argument(
+            '-o', '--output',
+            type=str,
+            required=True,
+            help='Path to the output text file that will contain the recovered prompt.'
+        )

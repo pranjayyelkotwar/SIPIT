@@ -111,6 +111,20 @@ sipit \
 
 The command writes a `manifest.json` file plus per-sample `.pt` tensor artifacts inside the output directory.
 
+### Recover a prompt from hidden states
+
+If you already have a saved prompt tensor, you can invert it back to text:
+
+```bash
+sipit \
+    --command invert-hidden-state \
+    --method SIPIT \
+    --model-id "openai-community/gpt2" \
+    --layer-idx -1 \
+    --input hidden-state-bundle/tensors/prompt.pt \
+    --output recovered.txt
+```
+
 ### Key options
 
 | Flag | Description | Default |
