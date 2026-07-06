@@ -229,3 +229,52 @@ class DatasetCollectionParser(DatasetBaseParser):
             action='store_true',
             help='Overwrite existing datasets if they already exist.'
         )
+
+
+class HiddenStateCaptureParser(ArgumentParser):
+    def __init__(self, description='Arguments for capturing hidden states from a model.'):
+        super().__init__(description=description)
+
+        self.add_argument(
+            '--model-id',
+            type=str,
+            default='openai-community/gpt2',
+            help='Hugging Face model identifier to load (default: openai-community/gpt2).'
+        )
+        self.add_argument(
+            '--precision',
+            type=int,
+            default=32,
+            choices=[4, 8, 16, 32],
+            help='Bit precision for model weights. Choices: {4, 8, 16, 32}. Default: 32.'
+        )
+        self.add_argument(
+            '--layer-idx',
+            type=int,
+            default=-1,
+            help='Index of the model layer to capture. Use -1 for the last layer (default: -1).'
+        )
+        self.add_argument(
+            '--seed',
+            type=int,
+            default=8,
+            help='Random seed for reproducibility (default: 8).'
+        )
+        self.add_argument(
+            '-o', '--output',
+            type=str,
+            required=True,
+            help='Directory where the captured hidden-state bundle will be written.'
+        )
+
+        input_group = self.add_mutually_exclusive_group(required=True)
+        input_group.add_argument(
+            '-p', '--prompt',
+            type=str,
+            help='Prompt text to capture hidden states for.'
+        )
+        input_group.add_argument(
+            '-i', '--input',
+            type=str,
+            help='Path to a saved dataset collection directory.'
+        )

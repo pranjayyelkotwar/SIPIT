@@ -87,6 +87,30 @@ sipit \
     --model-id "openai-community/gpt2"
 ```
 
+### Capture hidden states
+
+Save hidden states from a single prompt or from a saved dataset collection without running inversion:
+
+```bash
+# Capture one prompt at a selected layer
+sipit \
+    --command capture-hidden-state \
+    --model-id "openai-community/gpt2" \
+    --layer-idx -1 \
+    --output hidden-state-bundle \
+    --prompt "This prompt will be saved as a hidden-state tensor."
+
+# Capture every sample in a dataset collection
+sipit \
+    --command capture-hidden-state \
+    --model-id "openai-community/gpt2" \
+    --layer-idx -1 \
+    --output hidden-state-bundle \
+    --input data/SIPIT-Collection/gpt2
+```
+
+The command writes a `manifest.json` file plus per-sample `.pt` tensor artifacts inside the output directory.
+
 ### Key options
 
 | Flag | Description | Default |

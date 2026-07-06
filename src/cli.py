@@ -10,6 +10,7 @@ import transformers
 transformers.logging.set_verbosity_error()
 
 from src.commands import (
+    capture_hidden_state,
     create_dataset_collection,
     create_dataset_random,
     inversion_dataset,
@@ -17,6 +18,7 @@ from src.commands import (
 )
 
 COMMANDS = {
+    'capture-hidden-state': capture_hidden_state,
     'create-dataset-collection': create_dataset_collection,
     'create-dataset-random': create_dataset_random,
     'invert-dataset': inversion_dataset,
