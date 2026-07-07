@@ -165,6 +165,7 @@ class DatasetBaseParser(ArgumentParser):
                 "openai-community/gpt2",
                 "mistralai/Mistral-7B-v0.1",
                 "meta-llama/Meta-Llama-3-8B",
+                "meta-llama/Llama-3.1-8B-Instruct",
             ],
             help=(
                 'List of model identifiers to use. '

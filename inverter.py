@@ -11,7 +11,7 @@ from src.utils.model import setup
 
 load_dotenv()
 
-MODEL_ID = os.getenv("MODEL_ID", "meta-llama/Meta-Llama-3-8B")  # exact model that produced the tensor
+MODEL_ID = os.getenv("MODEL_ID", "meta-llama/Llama-3.1-8B-Instruct")  # exact model that produced the tensor
 LAYER_IDX = int(os.getenv("LAYER_IDX", "22"))
 STEP_SIZE = float(os.getenv("STEP_SIZE", "1.0"))
 TARGET_PATH = os.getenv("TARGET_PATH", "activations_l22_idx6573.pt")
