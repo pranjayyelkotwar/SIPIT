@@ -10,6 +10,9 @@ dependencies = [
     "accelerate",
     "bitsandbytes",
     "datasets",
+    "goodfire",          # <-- add
+    "huggingface_hub",   # <-- add
+    "nnsight==0.3.0",    # <-- only if you need it
     "numpy",
     "pandas",
     "python-dotenv",
