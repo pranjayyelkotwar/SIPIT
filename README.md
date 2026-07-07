@@ -103,8 +103,8 @@ sipit \
 # Capture every sample in a dataset collection
 sipit \
     --command capture-hidden-state \
-    --model-id "openai-community/gpt2" \
-    --layer-idx -1 \
+    --model-id "meta-llama/Llama-3.1-8B-Instruct" \
+    --layer-idx 19 \
     --output hidden-state-bundle \
     --input data/SIPIT-Collection/gpt2
 ```
