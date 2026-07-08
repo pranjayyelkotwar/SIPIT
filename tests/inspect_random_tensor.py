@@ -1,3 +1,4 @@
+import argparse
 import torch
 from pathlib import Path
 from pprint import pprint
@@ -44,7 +45,15 @@ def inspect(obj, name="root", depth=0, max_depth=5):
 
 
 def main():
-    path = Path(PT_FILE)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("pt_file", nargs="?", default=PT_FILE)
+    args = parser.parse_args()
+
+    path = Path(args.pt_file)
+
+    if not path.exists():
+        print(f"PT file not found: {path}")
+        return
 
     print(f"Loading: {path.resolve()}")
 

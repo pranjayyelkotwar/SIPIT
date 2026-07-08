@@ -119,8 +119,8 @@ If you already have a saved prompt tensor, you can invert it back to text:
 sipit \
     --command invert-hidden-state \
     --method SIPIT \
-    --model-id "openai-community/gpt2" \
-    --layer-idx -1 \
+    --model-id "meta-llama/Llama-3.1-8B-Instruct" \
+    --layer-idx 19 \
     --input hidden-state-bundle/tensors/prompt.pt \
     --output recovered.txt
 ```
