@@ -36,11 +36,22 @@ def load_sae(
 ):
     sae_id = sae_id_for_layer(layer, width)
 
-    sae, cfg_dict, sparsity = SAE.from_pretrained(
-        release=release,
-        sae_id=sae_id,
-        device=device,
-    )
+    if hasattr(SAE, "from_pretrained_with_cfg_and_sparsity"):
+        sae, cfg_dict, sparsity = SAE.from_pretrained_with_cfg_and_sparsity(
+            release=release,
+            sae_id=sae_id,
+            device=device,
+        )
+    else:
+        loaded = SAE.from_pretrained(
+            release=release,
+            sae_id=sae_id,
+            device=device,
+        )
+        if isinstance(loaded, tuple):
+            sae, cfg_dict, sparsity = loaded
+        else:
+            sae, cfg_dict, sparsity = loaded, None, None
 
     requested_dtype = resolve_dtype(dtype)
     if requested_dtype is not None:
@@ -53,6 +64,18 @@ def load_sae(
 
 def _tensor_for_sae(tensor: torch.Tensor, sae: SAE) -> torch.Tensor:
     return tensor.to(device=sae.device, dtype=sae.dtype)
+
+
+def _cfg_value(cfg, cfg_dict, *names):
+    for source in (cfg, cfg_dict):
+        if source is None:
+            continue
+        for name in names:
+            if isinstance(source, dict) and name in source:
+                return source[name]
+            if hasattr(source, name):
+                return getattr(source, name)
+    return "unknown"
 
 
 def encode_bundle(bundle, sae):
@@ -191,7 +214,9 @@ def main():
     print(
         "Loaded SAE "
         f"release={args.release} sae_id={sae_id_for_layer(args.layer, args.width)} "
-        f"hook={sae.cfg.hook_name} d_in={sae.cfg.d_in} d_sae={sae.cfg.d_sae} "
+        f"hook={_cfg_value(sae.cfg, cfg_dict, 'hook_name', 'hook_point', 'hook_point_in')} "
+        f"d_in={_cfg_value(sae.cfg, cfg_dict, 'd_in', 'd_model', 'input_dim')} "
+        f"d_sae={_cfg_value(sae.cfg, cfg_dict, 'd_sae', 'num_latents', 'dict_size')} "
         f"dtype={sae.dtype} sparsity_present={sparsity is not None}"
     )
 
