@@ -343,7 +343,7 @@ class HiddenStateGenerationParser(ArgumentParser):
         self.add_argument(
             '--max-new-tokens',
             type=int,
-            default=1,
+            default=64,
             help='Number of tokens to generate. The first token is generated from the activation.'
         )
         self.add_argument(

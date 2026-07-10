@@ -136,7 +136,7 @@ sipit \
     --layer-idx -1 \
     --input hidden-state-bundle/tensors/prompt.pt \
     --output generated.txt \
-    --max-new-tokens 1
+    --max-new-tokens 64
 ```
 
 The first generated token is produced directly from the supplied activation. If

@@ -1,8 +1,22 @@
+import argparse
+
 import torch
 import torch.nn.functional as F
 
-orig_path = "/Users/pranjayyelkotwar/Desktop/Dystopian_Bench/SIPIT/hidden-state-bundle/tensors/prompt_ls_sae_enc_19.pt"
-recon_path = "/Users/pranjayyelkotwar/Desktop/Dystopian_Bench/SIPIT/hidden-state-bundle/tensors/prompt_sae_reconstructed.pt"
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--original",
+    default="/Users/pranjayyelkotwar/Desktop/Dystopian_Bench/SIPIT/llama31_8b_l19/original_bundle/tensors/prompt.pt",
+)
+parser.add_argument(
+    "--reconstructed",
+    default="/Users/pranjayyelkotwar/Desktop/Dystopian_Bench/SIPIT/llama31_8b_l19/prompt_sae_reconstructed.pt",
+)
+parser.add_argument("--tokens", action="store_true")
+args = parser.parse_args()
+
+orig_path = args.original
+recon_path = args.reconstructed
 
 orig_obj = torch.load(orig_path, map_location="cpu")
 recon_obj = torch.load(recon_path, map_location="cpu")
@@ -60,3 +74,22 @@ if x.ndim >= 2:
 
     print("\nRMSE quantiles")
     print(torch.quantile(per_vec_rmse.flatten(), torch.tensor([0, 0.01, 0.05, 0.5, 0.95, 0.99, 1.0])))
+
+    if args.tokens:
+        input_ids = orig_obj.get("input_ids")
+        prompt = orig_obj.get("prompt")
+        print("\nPer-token diagnostics")
+        if prompt is not None:
+            print(f"prompt: {prompt!r}")
+        for idx, (token_cos, token_rmse) in enumerate(zip(per_vec_cos.flatten(), per_vec_rmse.flatten())):
+            token_id = None
+            if torch.is_tensor(input_ids) and input_ids.ndim == 1 and idx < input_ids.numel():
+                token_id = int(input_ids[idx])
+            token_label = f" token_id={token_id}" if token_id is not None else ""
+            print(
+                f"{idx:04d}{token_label} "
+                f"cos={token_cos.item():.8f} "
+                f"rmse={token_rmse.item():.8g} "
+                f"orig_norm={torch.linalg.vector_norm(x[idx].float()).item():.8g} "
+                f"recon_norm={torch.linalg.vector_norm(y[idx].float()).item():.8g}"
+            )
