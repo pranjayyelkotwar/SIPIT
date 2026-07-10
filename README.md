@@ -104,7 +104,7 @@ sipit \
 sipit \
     --command capture-hidden-state \
     --model-id "meta-llama/Llama-3.1-8B-Instruct" \
-    --layer-idx 19 \
+    --layer-idx 22 \
     --output hidden-state-bundle \
     --input data/SIPIT-Collection/gpt2
 ```
