@@ -125,6 +125,25 @@ sipit \
     --output recovered.txt
 ```
 
+### Generate from hidden states
+
+You can also resume a forward pass from a saved activation and decode model output:
+
+```bash
+sipit \
+    --command generate-from-hidden-state \
+    --model-id "openai-community/gpt2" \
+    --layer-idx -1 \
+    --input hidden-state-bundle/tensors/prompt.pt \
+    --output generated.txt \
+    --max-new-tokens 1
+```
+
+The first generated token is produced directly from the supplied activation. If
+`--max-new-tokens` is greater than 1, the artifact must also contain `input_ids`
+so the command can continue normal autoregressive generation after that first
+activation-derived token.
+
 ### Key options
 
 | Flag | Description | Default |

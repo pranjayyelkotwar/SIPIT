@@ -297,3 +297,69 @@ class HiddenStateInversionParser(BaseInversionParser):
             required=True,
             help='Path to the output text file that will contain the recovered prompt.'
         )
+
+
+class HiddenStateGenerationParser(ArgumentParser):
+    def __init__(self, description='Arguments for generating from a saved hidden-state tensor.'):
+        super().__init__(description=description)
+
+        self.add_argument(
+            '-i', '--input',
+            type=str,
+            required=True,
+            help='Path to a prompt tensor file or capture bundle directory.'
+        )
+        self.add_argument(
+            '-o', '--output',
+            type=str,
+            required=True,
+            help='Path to the output text file that will contain generated text.'
+        )
+        self.add_argument(
+            '--model-id',
+            type=str,
+            default='openai-community/gpt2',
+            help='Hugging Face model identifier to load (default: openai-community/gpt2).'
+        )
+        self.add_argument(
+            '--precision',
+            type=int,
+            default=32,
+            choices=[4, 8, 16, 32],
+            help='Bit precision for model weights. Choices: {4, 8, 16, 32}. Default: 32.'
+        )
+        self.add_argument(
+            '--layer-idx',
+            type=int,
+            default=-1,
+            help='Index of the saved activation layer. Use -1 for the last layer (default: -1).'
+        )
+        self.add_argument(
+            '--seed',
+            type=int,
+            default=8,
+            help='Random seed for reproducibility (default: 8).'
+        )
+        self.add_argument(
+            '--max-new-tokens',
+            type=int,
+            default=1,
+            help='Number of tokens to generate. The first token is generated from the activation.'
+        )
+        self.add_argument(
+            '--do-sample',
+            action='store_true',
+            help='Sample tokens instead of using greedy argmax decoding.'
+        )
+        self.add_argument(
+            '--temperature',
+            type=float,
+            default=1.0,
+            help='Sampling temperature for activation-derived and continuation tokens.'
+        )
+        self.add_argument(
+            '--top-k',
+            type=int,
+            default=0,
+            help='If sampling, keep only the top-k logits. Use 0 to disable top-k filtering.'
+        )

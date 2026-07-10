@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Any, Literal
 
 import torch
@@ -88,6 +89,109 @@ def hidden_states_from_prompt(
         layer_idx=layer_idx,
         require_grad=require_grad
     )
+
+
+def _decoder_blocks(model: PreTrainedModel) -> Sequence[Any]:
+    if hasattr(model, 'transformer') and hasattr(model.transformer, 'h'):  # type: ignore[attr-defined]
+        return model.transformer.h  # type: ignore[attr-defined]
+    if hasattr(model, 'model') and hasattr(model.model, 'layers'):  # type: ignore[attr-defined]
+        return model.model.layers  # type: ignore[attr-defined]
+    raise NotImplementedError(
+        f'Forwarding from hidden states is not implemented for {model.__class__.__name__}.'
+    )
+
+
+def logits_from_hidden_states(
+    hidden_states: torch.Tensor,
+    model: PreTrainedModel,
+    layer_idx: int,
+    input_ids: torch.LongTensor | None = None,
+) -> torch.Tensor:
+    """
+    Continue a decoder-only LM forward pass from a saved hidden-state tensor.
+
+    Hugging Face causal LM hidden-state tuples use index 0 for token embeddings
+    and index N for the output after decoder block N - 1. To resume from index K,
+    this injects the saved activation at decoder block K's input. For K == N,
+    the activation is already at the final hidden-state position and only the
+    final norm/lm_head path is applied.
+    """
+    if hidden_states.dim() == 2:
+        hidden_states = hidden_states.unsqueeze(0)
+    if hidden_states.dim() != 3:
+        raise ValueError(
+            f'Expected hidden states with shape (seq, hidden) or (batch, seq, hidden), '
+            f'got {tuple(hidden_states.shape)}.'
+        )
+
+    blocks = _decoder_blocks(model)
+    total_layers = len(blocks)
+    if layer_idx < 0:
+        layer_idx = total_layers + layer_idx + 1
+    if layer_idx < 0 or layer_idx > total_layers:
+        raise ValueError(f'layer_idx must resolve to [0, {total_layers}], got {layer_idx}.')
+
+    device = model.device  # type: ignore
+    model_dtype = getattr(model, 'dtype', hidden_states.dtype)
+    hidden_states = hidden_states.to(device=device, dtype=model_dtype)
+    batch_size, seq_len, _ = hidden_states.shape
+
+    if input_ids is not None:
+        if input_ids.dim() == 1:
+            input_ids = input_ids.unsqueeze(0)
+        if tuple(input_ids.shape) != (batch_size, seq_len):
+            raise ValueError(
+                f'input_ids shape {tuple(input_ids.shape)} does not match hidden-state '
+                f'batch/sequence shape {(batch_size, seq_len)}.'
+            )
+        placeholder_ids = input_ids.to(device)
+    else:
+        placeholder_ids = torch.zeros((batch_size, seq_len), dtype=torch.long, device=device)
+
+    with torch.no_grad():
+        if layer_idx == total_layers:
+            output_embeddings = model.get_output_embeddings()
+            if hasattr(output_embeddings, 'weight'):
+                hidden_states = hidden_states.to(
+                    device=output_embeddings.weight.device,
+                    dtype=output_embeddings.weight.dtype,
+                )
+            final_norm = None
+            if hasattr(model, 'transformer') and hasattr(model.transformer, 'ln_f'):  # type: ignore[attr-defined]
+                final_norm = model.transformer.ln_f  # type: ignore[attr-defined]
+            elif hasattr(model, 'model') and hasattr(model.model, 'norm'):  # type: ignore[attr-defined]
+                final_norm = model.model.norm  # type: ignore[attr-defined]
+            if final_norm is not None:
+                hidden_states = final_norm(hidden_states)
+            return output_embeddings(hidden_states)  # type: ignore[misc]
+
+        if layer_idx == 0:
+            outputs: CausalLMOutputWithPast = model(
+                inputs_embeds=hidden_states,
+                output_hidden_states=False,
+                use_cache=False,
+            )  # type: ignore
+            return outputs.logits  # type: ignore[return-value]
+
+        def replace_hidden(_module, inputs):
+            incoming_hidden_states = inputs[0]
+            replacement = hidden_states.to(
+                device=incoming_hidden_states.device,
+                dtype=incoming_hidden_states.dtype,
+            )
+            return (replacement,) + tuple(inputs[1:])
+
+        handle = blocks[layer_idx].register_forward_pre_hook(replace_hidden)
+        try:
+            outputs: CausalLMOutputWithPast = model(
+                input_ids=placeholder_ids,
+                output_hidden_states=False,
+                use_cache=False,
+            )  # type: ignore
+        finally:
+            handle.remove()
+
+    return outputs.logits  # type: ignore[return-value]
 
 
 def hidden_states_from_embeddings(
@@ -276,4 +380,3 @@ def setup(
     torch.set_grad_enabled(True)
 
     return model, tokenizer, device, layer_idx
-

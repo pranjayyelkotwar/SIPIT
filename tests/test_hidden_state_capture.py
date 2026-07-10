@@ -4,6 +4,7 @@ import torch
 
 from src.commands import capture_hidden_state, invert_hidden_state
 from src.datasets.dataset import DatasetCollection, TokenizedDataset
+from src.utils.model import hidden_states_from_input_ids, logits_from_hidden_states
 
 
 PROMPT = 'Hello world'
@@ -135,3 +136,54 @@ class TestHiddenStateInversion:
         assert ret == 0
         assert output_path.exists()
         assert output_path.read_text(encoding='utf-8') == prompt
+
+
+class TestHiddenStateGeneration:
+    def test_logits_from_last_hidden_state_match_full_forward(self, gpt2):
+        model, tokenizer, device, layer_idx = gpt2
+        input_ids = torch.tensor(
+            tokenizer(PROMPT, add_special_tokens=False)['input_ids'],
+            dtype=torch.long,
+            device=device,
+        )
+        hidden_states = hidden_states_from_input_ids(
+            input_ids=input_ids,
+            model=model,
+            layer_idx=layer_idx,
+            require_grad=False,
+        )
+
+        resumed_logits = logits_from_hidden_states(
+            hidden_states=hidden_states,
+            model=model,
+            layer_idx=layer_idx,
+            input_ids=input_ids.detach().cpu(),
+        )
+        full_logits = model(input_ids=input_ids.unsqueeze(0), use_cache=False).logits
+
+        assert torch.allclose(resumed_logits, full_logits, atol=1e-5)
+
+    def test_logits_from_middle_hidden_state_match_full_forward(self, gpt2):
+        model, tokenizer, device, _layer_idx = gpt2
+        layer_idx = 1
+        input_ids = torch.tensor(
+            tokenizer(PROMPT, add_special_tokens=False)['input_ids'],
+            dtype=torch.long,
+            device=device,
+        )
+        hidden_states = hidden_states_from_input_ids(
+            input_ids=input_ids,
+            model=model,
+            layer_idx=layer_idx,
+            require_grad=False,
+        )
+
+        resumed_logits = logits_from_hidden_states(
+            hidden_states=hidden_states,
+            model=model,
+            layer_idx=layer_idx,
+            input_ids=input_ids.detach().cpu(),
+        )
+        full_logits = model(input_ids=input_ids.unsqueeze(0), use_cache=False).logits
+
+        assert torch.allclose(resumed_logits, full_logits, atol=1e-5)

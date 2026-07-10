@@ -1,8 +1,8 @@
 import torch
 import torch.nn.functional as F
 
-orig_path = "/Users/pranjayyelkotwar/Downloads/hidden-state-bundle/tensors/prompt.pt"
-recon_path = "/Users/pranjayyelkotwar/Downloads/hidden-state-bundle/tensors/prompt_sae_reconstructed.pt"
+orig_path = "/Users/pranjayyelkotwar/Desktop/Dystopian_Bench/SIPIT/hidden-state-bundle/tensors/prompt_ls_sae_enc_19.pt"
+recon_path = "/Users/pranjayyelkotwar/Desktop/Dystopian_Bench/SIPIT/hidden-state-bundle/tensors/prompt_sae_reconstructed.pt"
 
 orig_obj = torch.load(orig_path, map_location="cpu")
 recon_obj = torch.load(recon_path, map_location="cpu")

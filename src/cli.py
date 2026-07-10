@@ -13,6 +13,7 @@ from src.commands import (
     capture_hidden_state,
     create_dataset_collection,
     create_dataset_random,
+    generate_from_hidden_state,
     invert_hidden_state,
     inversion_dataset,
     inversion_single
@@ -22,6 +23,7 @@ COMMANDS = {
     'capture-hidden-state': capture_hidden_state,
     'create-dataset-collection': create_dataset_collection,
     'create-dataset-random': create_dataset_random,
+    'generate-from-hidden-state': generate_from_hidden_state,
     'invert-hidden-state': invert_hidden_state,
     'invert-dataset': inversion_dataset,
     'invert-single': inversion_single
