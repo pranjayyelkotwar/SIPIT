@@ -40,7 +40,7 @@ def _capture_prompt(
         tokenizer=tokenizer,
         layer_idx=layer_idx,
         require_grad=False,
-        add_special_tokens=False,
+        add_special_tokens=True,
     )
     if hidden_states.dim() == 3 and hidden_states.size(0) == 1:
         hidden_states = hidden_states.squeeze(0)

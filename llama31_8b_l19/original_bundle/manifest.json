@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "command": "capture-hidden-state",
+  "capture_mode": "prompt",
+  "model_id": "meta-llama/Llama-3.1-8B",
+  "precision": 32,
+  "requested_layer_idx": 19,
+  "layer_idx": 19,
+  "seed": 8,
+  "input": "The capital of France is",
+  "artifacts": [
+    {
+      "kind": "prompt",
+      "file": "tensors/prompt.pt",
+      "token_length": 5,
+      "hidden_state_shape": [
+        5,
+        4096
+      ]
+    }
+  ]
+}

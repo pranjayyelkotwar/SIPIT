@@ -1,0 +1,127 @@
+(main) root@C.44496840:/workspace/SIPIT$   python3 tests/compare_hidden_activations.py \compare_hidden_activations.py \
+    --original "$OUT/original_bundle/tensors/prompt.pt" \
+    --reconstructed "$OUT/prompt_ls_sae_reconstructed_l22.pt" \
+    --tokens
+original: torch.Size([10, 4096]) torch.float32
+reconstructed: torch.Size([10, 4096]) torch.float32
+
+Global similarity
+cosine similarity: 0.10623425
+relative L2 error: 202.63519287
+L2 error:          133072.98437500
+MSE:               432334.44
+RMSE:              657.52142
+MAE:               111.27073
+max abs error:     27503.506
+SNR dB:            -46.1343
+
+Per-vector over last dim
+mean cosine: 0.76639652
+min cosine:  0.10675195
+mean RMSE:   208.09602
+max RMSE:    2079.2654
+
+Cosine quantiles
+tensor([0.1068, 0.1677, 0.4117, 0.8413, 0.8868, 0.9096, 0.9153])
+
+RMSE quantiles
+tensor([1.4663e-01, 1.4860e-01, 1.5648e-01, 1.9274e-01, 1.1437e+03, 1.8922e+03,
+        2.0793e+03])
+
+Per-token diagnostics
+prompt: 'Why do airplanes leave white trails in the sky?'
+0000 token_id=10445 cos=0.10675195 rmse=2079.2654 orig_norm=653.32343 recon_norm=133141.14
+0001 token_id=656 cos=0.91525221 rmse=0.14662586 orig_norm=22.993206 recon_norm=19.545481
+0002 token_id=76481 cos=0.84477967 rmse=0.2015194 orig_norm=23.78367 recon_norm=18.003208
+0003 token_id=5387 cos=0.78442466 rmse=0.21046101 orig_norm=21.351797 recon_norm=14.288564
+0004 token_id=4251 cos=0.83783180 rmse=0.18665193 orig_norm=21.512665 recon_norm=15.839993
+0005 token_id=33965 cos=0.85199654 rmse=0.18516584 orig_norm=22.634783 recon_norm=19.358257
+0006 token_id=304 cos=0.79601365 rmse=0.21039754 orig_norm=22.157183 recon_norm=16.430832
+0007 token_id=279 cos=0.83155221 rmse=0.19683424 orig_norm=22.429701 recon_norm=16.786001
+0008 token_id=13180 cos=0.84596884 rmse=0.16851941 orig_norm=20.154202 recon_norm=16.140902
+0009 token_id=30 cos=0.84939384 rmse=0.18865368 orig_norm=22.741137 recon_norm=17.999712
+
+(main) root@C.44496840:/workspace/SIPIT$ cat llama31_8b_l22_float32/generated_from_original.txt
+ What is the "mystery" of the 9/11 "collapses"? What is the "mystery" of the "melted" steel in the WTC towers? What is the "mystery" of the "melted" steel in the WTC towers? What is the "m(main) root@C.44496840:/workspace/SIPIT$ cat llama31_8b_l22_float32/generated_from_reconstructed.txt
+ What is the "mystery" of the 9/11 "collapses"? What is the "mystery" of the "melted" steel in the WTC towers? What is the "mystery" of the "melted" steel in the WTC towers? What is the "m(main) root@C.44496840:/workspace/SIPIT$ 
+
+
+
+  PROMPT="Why do airplanes leave white trails in the sky?"
+  MODEL="meta-llama/Llama-3.1-8B"
+  LAYER=22
+  OUT="llama31_8b_l22_float32"
+
+  Capture layer-22 hidden state in float32:
+
+  sipit \
+    --command capture-hidden-state \
+    --model-id "$MODEL" \
+    --precision 32 \
+    --layer-idx "$LAYER" \
+    --output "$OUT/original_bundle" \
+    --prompt "$PROMPT"
+
+  Generate from the raw hidden state:
+
+  sipit \
+    --command generate-from-hidden-state \
+    --model-id "$MODEL" \
+    --precision 32 \
+    --layer-idx "$LAYER" \
+    --input "$OUT/original_bundle/tensors/prompt.pt" \
+    --output "$OUT/generated_from_original.txt" \
+    --max-new-tokens 64
+
+  Encode with LlamaScope SAE layer 22 in float32:
+
+  python3 tests/test_llamascope_sae.py \
+    --input "$OUT/original_bundle/tensors/prompt.pt" \
+    --output "$OUT/prompt_ls_sae_encoded_l22.pt" \
+    --device cuda \
+    --release llama_scope_lxr_32x \
+    --layer "$LAYER" \
+    --width 32x \
+    --float32 \
+    --encode
+
+  Decode / reconstruct hidden state:
+
+  python3 tests/test_llamascope_sae.py \
+    --input "$OUT/prompt_ls_sae_encoded_l22.pt" \
+    --output "$OUT/prompt_ls_sae_reconstructed_l22.pt" \
+    --device cuda \
+    --release llama_scope_lxr_32x \
+    --layer "$LAYER" \
+    --width 32x \
+    --float32 \
+    --decode
+
+  Generate from reconstructed hidden state:
+
+  sipit \
+    --command generate-from-hidden-state \
+    --model-id "$MODEL" \
+    --input "$OUT/prompt_ls_sae_reconstructed_l22.pt" \
+    --output "$OUT/generated_from_reconstructed.txt" \
+    --max-new-tokens 64
+
+  Compare raw tensors:
+
+  python3 tests/compare_hidden_activations.py \
+    --original "$OUT/original_bundle/tensors/prompt.pt" \
+    --reconstructed "$OUT/prompt_ls_sae_reconstructed_l22.pt" \
+    --tokens
+
+
+  cat "$OUT/generated_from_original.txt"
+  cat "$OUT/generated_from_reconstructed.txt"
+
+sipit \
+    --command invert-hidden-state \
+    --method SIPIT \
+    --model-id "$MODEL" \
+    --precision 32 \
+    --layer-idx "$LAYER" \
+    --input "$OUT/prompt_ls_sae_reconstructed_l22.pt" \
+    --output "$OUT/inverted_from_reconstructed.txt"
