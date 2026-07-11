@@ -46,7 +46,7 @@ def _capture_prompt(
         hidden_states = hidden_states.squeeze(0)
     encoded = tokenizer(
         prompt,
-        add_special_tokens=False,
+        add_special_tokens=True,
         return_attention_mask=False,
         return_tensors='pt',
     )
