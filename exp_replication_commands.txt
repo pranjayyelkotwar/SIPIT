@@ -1,0 +1,85 @@
+  PROMPT="Why do airplanes leave white trails in the sky?"
+  MODEL="meta-llama/Llama-3.1-8B"
+  LAYER=22
+  OUT="llama31_8b_l22_float32"
+
+  Capture layer-22 hidden state in float32:
+
+  sipit \
+    --command capture-hidden-state \
+    --model-id "$MODEL" \
+    --precision 32 \
+    --layer-idx "$LAYER" \
+    --output "$OUT/original_bundle" \
+    --prompt "$PROMPT"
+
+  Generate from the raw hidden state:
+
+  sipit \
+    --command generate-from-hidden-state \
+    --model-id "$MODEL" \
+    --precision 32 \
+    --layer-idx "$LAYER" \
+    --input "$OUT/original_bundle/tensors/prompt.pt" \
+    --output "$OUT/generated_from_original.txt" \
+    --max-new-tokens 64
+
+  Encode with LlamaScope SAE layer 22 in float32:
+
+  python3 tests/test_llamascope_sae.py \
+    --input "$OUT/original_bundle/tensors/prompt.pt" \
+    --output "$OUT/prompt_ls_sae_encoded_l22.pt" \
+    --device cuda \
+    --release llama_scope_lxr_32x \
+    --layer "$LAYER" \
+    --width 32x \
+    --float32 \
+    --encode
+
+  Decode / reconstruct hidden state:
+
+  python3 tests/test_llamascope_sae.py \
+    --input "$OUT/prompt_ls_sae_encoded_l22.pt" \
+    --output "$OUT/prompt_ls_sae_reconstructed_l22.pt" \
+    --device cuda \
+    --release llama_scope_lxr_32x \
+    --layer "$LAYER" \
+    --width 32x \
+    --float32 \
+    --decode
+
+  Generate from reconstructed hidden state:
+
+  sipit \
+    --command generate-from-hidden-state \
+    --model-id "$MODEL" \
+    --precision 32 \
+    --layer-idx "$LAYER" \
+    --input "$OUT/prompt_ls_sae_reconstructed_l22.pt" \
+    --output "$OUT/generated_from_reconstructed.txt" \
+    --max-new-tokens 64
+
+  Compare raw tensors:
+
+  python3 tests/compare_hidden_activations.py \
+    --original "$OUT/original_bundle/tensors/prompt.pt" \
+    --reconstructed "$OUT/prompt_ls_sae_reconstructed_l22.pt" \
+    --tokens
+
+  Inspect generated outputs:
+
+  cat "$OUT/generated_from_original.txt"
+  cat "$OUT/generated_from_reconstructed.txt"
+
+  If your shell does not have the installed console script, replace sipit with:
+
+  python3 -m src.cli
+
+    sipit \
+    --command invert-hidden-state \
+    --method SIPIT \
+    --model-id "$MODEL" \
+    --precision 32 \
+    --layer-idx "$LAYER" \
+    --input "$OUT/prompt_ls_sae_reconstructed_l22.pt" \
+    --output "$OUT/inverted_from_reconstructed.txt"
