@@ -144,6 +144,33 @@ The first generated token is produced directly from the supplied activation. If
 so the command can continue normal autoregressive generation after that first
 activation-derived token.
 
+### Invert perturbed hidden states
+
+For noisy or SAE-reconstructed activations, use the separate approximate
+inversion command. It accepts a discrete candidate only when both its per-token
+cosine similarity and RMSE pass the configured thresholds:
+
+```bash
+sipit \
+    --command invert-hidden-state-approx \
+    --model-id "meta-llama/Llama-3.1-8B" \
+    --precision 32 \
+    --layer-idx 22 \
+    --input llama31_8b_l22_float32/prompt_ls_sae_reconstructed_l22.pt \
+    --output llama31_8b_l22_float32/inverted_from_reconstructed.txt \
+    --special-start-token 128000 \
+    --skip-target-tokens 1 \
+    --min-cosine-similarity 0.78 \
+    --max-rmse 0.22
+```
+
+The defaults (`0.78` cosine and `0.22` RMSE) are rounded from the observed
+non-BOS LlamaScope SAE reconstruction rows in
+`misc/llama31_l22_token_deltas.csv`; the aggregate comparison is in
+`misc/llama31_l22_hidden_state_deltas.csv`. They are experimental baselines,
+not universal thresholds. The reconstructed BOS row is a severe outlier, so
+the example supplies the known BOS token and skips its target row.
+
 ### Key options
 
 | Flag | Description | Default |

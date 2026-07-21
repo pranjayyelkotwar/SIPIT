@@ -299,6 +299,46 @@ class HiddenStateInversionParser(BaseInversionParser):
         )
 
 
+class ApproximateHiddenStateInversionParser(HiddenStateInversionParser):
+    def __init__(self):
+        super().__init__(
+            description=(
+                'Invert a perturbed hidden-state tensor using cosine similarity '
+                'and RMSE acceptance criteria.'
+            )
+        )
+        self.add_argument(
+            '--min-cosine-similarity',
+            type=float,
+            default=0.78,
+            help=(
+                'Minimum per-token cosine similarity required for acceptance. '
+                'Default 0.78 is rounded from the non-BOS LlamaScope SAE rows '
+                'in misc/llama31_l22_token_deltas.csv.'
+            ),
+        )
+        self.add_argument(
+            '--max-rmse',
+            type=float,
+            default=0.22,
+            help=(
+                'Maximum per-token RMSE allowed for acceptance. Default 0.22 '
+                'is rounded from the non-BOS LlamaScope SAE rows in the '
+                'token-level baseline CSV.'
+            ),
+        )
+        self.add_argument(
+            '--skip-target-tokens',
+            type=int,
+            default=0,
+            help=(
+                'Number of leading target hidden-state rows to ignore. Use 1 '
+                'for the captured Llama prompt bundle whose SAE-reconstructed '
+                'BOS row is an outlier (default: 0).'
+            ),
+        )
+
+
 class HiddenStateGenerationParser(ArgumentParser):
     def __init__(self, description='Arguments for generating from a saved hidden-state tensor.'):
         super().__init__(description=description)

@@ -83,3 +83,19 @@
     --layer-idx "$LAYER" \
     --input "$OUT/prompt_ls_sae_reconstructed_l22.pt" \
     --output "$OUT/inverted_from_reconstructed.txt"
+
+  Approximate inversion using the observed non-BOS SAE error range. The
+  reconstructed BOS row is an outlier, so retain BOS as known prefix context
+  and skip its target row:
+
+  sipit \
+    --command invert-hidden-state-approx \
+    --model-id "$MODEL" \
+    --precision 32 \
+    --layer-idx "$LAYER" \
+    --input "$OUT/prompt_ls_sae_reconstructed_l22.pt" \
+    --output "$OUT/inverted_from_reconstructed_approx.txt" \
+    --special-start-token 128000 \
+    --skip-target-tokens 1 \
+    --min-cosine-similarity 0.78 \
+    --max-rmse 0.22

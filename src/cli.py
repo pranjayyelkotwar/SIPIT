@@ -15,6 +15,7 @@ from src.commands import (
     create_dataset_random,
     generate_from_hidden_state,
     invert_hidden_state,
+    invert_hidden_state_approx,
     inversion_dataset,
     inversion_single
 )
@@ -25,6 +26,7 @@ COMMANDS = {
     'create-dataset-random': create_dataset_random,
     'generate-from-hidden-state': generate_from_hidden_state,
     'invert-hidden-state': invert_hidden_state,
+    'invert-hidden-state-approx': invert_hidden_state_approx,
     'invert-dataset': inversion_dataset,
     'invert-single': inversion_single
 }
