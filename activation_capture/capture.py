@@ -18,18 +18,26 @@ class CaptureBatch:
 
 
 class ResidualPostCapture:
-    """Capture outputs of Hugging Face Llama decoder blocks."""
+    """Capture Llama residual-post states using HF hidden-state tuple indices."""
 
     def __init__(self, model, layers: list[int]) -> None:
         decoder_layers = model.model.layers
-        invalid = [layer for layer in layers if not 0 <= layer < len(decoder_layers)]
+        invalid = [layer for layer in layers if not 1 <= layer <= len(decoder_layers)]
         if invalid:
             raise ValueError(
-                f"Invalid layers {invalid}; model has {len(decoder_layers)} blocks."
+                f"Invalid layers {invalid}; residual-post layers use Hugging Face "
+                f"hidden-state indices 1 through {len(decoder_layers)}."
             )
         self.values: dict[int, torch.Tensor] = {}
+
+        # Match `outputs.hidden_states[layer_idx]`, which is also the convention
+        # used by src/commands/capture_hidden_state.py. Hugging Face reserves
+        # hidden_states[0] for the embedding output, so hidden_states[L] is the
+        # residual-post output of zero-based decoder block L - 1. Keeping the
+        # requested HF index as the dictionary/file label makes captures from
+        # the two commands directly comparable without an off-by-one conversion.
         self.handles = [
-            decoder_layers[layer].register_forward_hook(self._hook(layer))
+            decoder_layers[layer - 1].register_forward_hook(self._hook(layer))
             for layer in layers
         ]
 
@@ -119,4 +127,3 @@ def merge_metadata(output_dir: Path, world_size: int) -> Path:
             handle.write(json.dumps(record) + "\n")
     logging.info("Merged %d metadata records into %s", len(records), destination)
     return destination
-

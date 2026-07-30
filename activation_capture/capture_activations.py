@@ -72,7 +72,14 @@ def parse_args() -> argparse.Namespace:
         "--model", default="meta-llama/Meta-Llama-3.1-8B"
     )
     parser.add_argument("--output-dir", type=Path, default=Path("activation_outs"))
-    parser.add_argument("--layers", default="22")
+    parser.add_argument(
+        "--layers",
+        default="22",
+        help=(
+            "Comma-separated Hugging Face hidden-state indices to capture "
+            "(1..num_hidden_layers; index 0 is the embedding output)."
+        ),
+    )
     parser.add_argument(
         "--dataset-source", choices=("qa", "openwebtext"), default="qa"
     )

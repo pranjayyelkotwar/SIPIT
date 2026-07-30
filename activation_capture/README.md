@@ -119,13 +119,12 @@ python activation_capture/capture_activations.py \
   --layers 22 \
   --dataset-source qa \
   --qa-datasets arc_easy,mmlu,hle \
-  --qa-num-samples arc_easy:1000,mmlu:2200,hle:1000 \
+  --qa-num-samples arc_easy:2000,mmlu:2000,hle:2000 \
   --max-token-length 192 \
   --batch-size 8 \
   --num-workers 4 \
   --add-bos-token \
-  --include-choices \
-  --dtype bfloat16
+  --include-choices
 ```
 
 ### Capture layers 16 and 22

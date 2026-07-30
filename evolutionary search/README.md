@@ -125,7 +125,7 @@ python "evolutionary search/compute_perplexity_targets.py" \
   --layer 22 \
   --max-length 192 \
   --device cuda \
-  --dtype bfloat16
+  --dtype float32
 ```
 
 This loads the base language model and may require Hugging Face access to the
