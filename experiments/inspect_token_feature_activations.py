@@ -35,6 +35,15 @@ from llamascope import (  # noqa: E402
 
 
 DEFAULT_MODEL = "meta-llama/Meta-Llama-3.1-8B"
+CSV_FIELDNAMES = [
+    "feature_id",
+    "rank",
+    "token_position",
+    "token_id",
+    "token_text",
+    "activation",
+    "context",
+]
 
 
 def parse_args() -> argparse.Namespace:
@@ -127,6 +136,20 @@ def encode_selected_features(
     return torch.cat(selected_chunks, dim=0)
 
 
+def top_positive_activations(
+    activations: torch.Tensor, top_k: int
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Return the strongest positions whose activation is strictly positive."""
+    positive_positions = torch.nonzero(activations > 0, as_tuple=False).flatten()
+    if positive_positions.numel() == 0:
+        return activations.new_empty(0), positive_positions
+    positive_values = activations[positive_positions]
+    values, local_positions = torch.topk(
+        positive_values, k=min(top_k, positive_values.numel())
+    )
+    return values, positive_positions[local_positions]
+
+
 def main() -> None:
     args = parse_args()
     if args.chunk_size < 1:
@@ -180,8 +203,8 @@ def main() -> None:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     rows = []
     for column, feature_id in enumerate(feature_ids):
-        values, positions = torch.topk(
-            activations[:, column], k=min(args.top_k_tokens, states.shape[0])
+        values, positions = top_positive_activations(
+            activations[:, column], args.top_k_tokens
         )
         for rank, (value, position) in enumerate(
             zip(values.tolist(), positions.tolist(), strict=True), start=1
@@ -200,7 +223,7 @@ def main() -> None:
                 }
             )
     with args.output.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(handle, fieldnames=CSV_FIELDNAMES)
         writer.writeheader()
         writer.writerows(rows)
 

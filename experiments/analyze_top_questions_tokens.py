@@ -31,11 +31,26 @@ from llamascope import (  # noqa: E402
 from experiments.inspect_token_feature_activations import (  # noqa: E402
     DEFAULT_MODEL,
     encode_selected_features,
+    top_positive_activations,
     token_context,
 )
 
 
 DEFAULT_FEATURE_ID = 2548
+CSV_FIELDNAMES = [
+    "feature_id",
+    "question_rank",
+    "source_id",
+    "final_token_activation",
+    "question_text",
+    "activation_path",
+    "token_rank",
+    "token_position",
+    "token_id",
+    "token_text",
+    "token_activation",
+    "context",
+]
 
 
 def parse_args() -> argparse.Namespace:
@@ -167,9 +182,8 @@ def analyze_question(
     feature_activations = encode_selected_features(
         states, sae, [feature_id], chunk_size
     )[:, 0]
-    values, positions = torch.topk(
-        feature_activations,
-        k=min(top_k_tokens, feature_activations.shape[0]),
+    values, positions = top_positive_activations(
+        feature_activations, top_k_tokens
     )
     rows = []
     for token_rank, (value, position) in enumerate(
@@ -243,7 +257,7 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     csv_path = args.output_dir / "token_feature_rankings.csv"
     with csv_path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(handle, fieldnames=CSV_FIELDNAMES)
         writer.writeheader()
         writer.writerows(rows)
 
