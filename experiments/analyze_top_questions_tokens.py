@@ -103,6 +103,13 @@ def parse_args() -> argparse.Namespace:
         help="Must match the original activation-capture setting.",
     )
     parser.add_argument(
+        "--prompt-suffix",
+        help=(
+            "Common suffix used during capture, for example 'Answer:'. This "
+            "must be supplied when capture preserved the suffix while truncating."
+        ),
+    )
+    parser.add_argument(
         "--trust-remote-code", action=argparse.BooleanOptionalAction, default=False
     )
     return parser.parse_args()
@@ -145,12 +152,36 @@ def resolve_question_activation(
 
 
 def aligned_tokens(
-    tokenizer, prompt: str, state_count: int, add_bos_token: bool
+    tokenizer,
+    prompt: str,
+    state_count: int,
+    add_bos_token: bool,
+    prompt_suffix: str | None = None,
 ) -> tuple[list[int], list[str]]:
     full_token_ids = tokenizer.encode(
         prompt, add_special_tokens=add_bos_token, truncation=False
     )
-    token_ids = full_token_ids[:state_count]
+    if len(full_token_ids) <= state_count or not prompt_suffix:
+        token_ids = full_token_ids[:state_count]
+    else:
+        suffix_text = f"\n\n{prompt_suffix.strip()}"
+        if not prompt.endswith(suffix_text):
+            raise ValueError(
+                "Prompt does not end with the configured --prompt-suffix."
+            )
+        suffix_token_ids = tokenizer.encode(
+            suffix_text, add_special_tokens=False, truncation=False
+        )
+        body_budget = state_count - len(suffix_token_ids)
+        if body_budget < 1:
+            raise ValueError("Activation tensor is too short for the prompt suffix.")
+        body_token_ids = tokenizer.encode(
+            prompt[: -len(suffix_text)],
+            add_special_tokens=add_bos_token,
+            truncation=True,
+            max_length=body_budget,
+        )
+        token_ids = body_token_ids + suffix_token_ids
     if len(token_ids) != state_count:
         raise ValueError(
             f"Prompt produced {len(token_ids)} tokens for {state_count} states. "
@@ -168,6 +199,7 @@ def analyze_question(
     sae,
     feature_id: int,
     add_bos_token: bool,
+    prompt_suffix: str | None,
     chunk_size: int,
     top_k_tokens: int,
     context_tokens: int,
@@ -178,6 +210,7 @@ def analyze_question(
         question["prompt_text"],
         states.shape[0],
         add_bos_token,
+        prompt_suffix,
     )
     feature_activations = encode_selected_features(
         states, sae, [feature_id], chunk_size
@@ -248,6 +281,7 @@ def main() -> None:
                 sae=loaded.sae,
                 feature_id=args.feature_id,
                 add_bos_token=args.add_bos_token,
+                prompt_suffix=args.prompt_suffix,
                 chunk_size=args.chunk_size,
                 top_k_tokens=args.top_k_tokens,
                 context_tokens=args.context_tokens,
@@ -272,6 +306,7 @@ def main() -> None:
                     "context_tokens": args.context_tokens,
                     "layer": layer,
                     "model": args.model,
+                    "prompt_suffix": args.prompt_suffix,
                     "sae_release": loaded.release,
                     "sae_id": loaded.sae_id,
                 },
