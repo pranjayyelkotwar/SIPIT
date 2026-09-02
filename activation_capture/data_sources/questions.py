@@ -70,7 +70,7 @@ class HLEDataset(BaseTextDataset):
         return load_dataset("cais/hle", split=split)
 
     def keep_example(self, record: dict[str, Any]) -> bool:
-        return record.get("image", "") == ""
+        return super().keep_example(record)
 
     def normalize_record(self, record: dict[str, Any], idx: int) -> dict[str, Any]:
         choices = (
@@ -111,3 +111,25 @@ class HLEDataset(BaseTextDataset):
             "gold_answer": answer,
             "has_image": False,
         }
+
+
+class HLEMathShortAnswerDataset(HLEDataset):
+    dataset_name = "hle_math_short_answer"
+
+    def keep_example(self, record: dict[str, Any]) -> bool:
+        return (
+            super().keep_example(record)
+            and record.get("answer_type") == "exactMatch"
+            and record.get("category") == "Math"
+        )
+
+
+class HLENonMathShortAnswerDataset(HLEDataset):
+    dataset_name = "hle_non_math_short_answer"
+
+    def keep_example(self, record: dict[str, Any]) -> bool:
+        return (
+            super().keep_example(record)
+            and record.get("answer_type") == "exactMatch"
+            and record.get("category") != "Math"
+        )

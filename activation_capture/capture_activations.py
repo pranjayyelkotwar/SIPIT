@@ -100,6 +100,13 @@ def parse_args() -> argparse.Namespace:
         "--include-choices", action=argparse.BooleanOptionalAction, default=True
     )
     parser.add_argument(
+        "--prompt-suffix",
+        help=(
+            "Optional common final prompt line, for example 'Answer:'. The "
+            "suffix is preserved when long prompt bodies are truncated."
+        ),
+    )
+    parser.add_argument(
         "--dtype",
         choices=("float32", "float16", "bfloat16"),
         default="bfloat16",
@@ -141,6 +148,9 @@ def main() -> None:
             add_bos_token=args.add_bos_token,
             include_choices=args.include_choices,
             num_samples=parse_limits(args.qa_num_samples),
+            shuffle=args.shuffle,
+            seed=args.seed,
+            prompt_suffix=args.prompt_suffix,
         )
     else:
         dataset = OpenWebTextSentencesDataset(

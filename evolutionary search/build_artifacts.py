@@ -20,13 +20,16 @@ from llamascope import DEFAULT_RELEASE, DEFAULT_WIDTH, load_llamascope_sae
 
 def normalize_dataset_name(name: str) -> str:
     lowered = name.lower()
+    canonical = lowered.replace("-", "_").replace(" ", "_")
+    if canonical.startswith("hle_"):
+        return canonical
     if "arc" in lowered:
         return "arc_easy"
     if "hle" in lowered:
         return "hle"
     if "mmlu" in lowered:
         return "mmlu"
-    return lowered.replace("-", "_").replace(" ", "_")
+    return canonical
 
 
 def resolve_activation_path(

@@ -72,3 +72,45 @@ JSON file records the model, SAE, layer, and feature IDs used.
 The prompt and `--add-bos-token` setting must match the original capture. If the
 capture truncated a long prompt, the script applies the same prefix length from
 the activation tensor.
+
+## Rank questions for selected final-token features
+
+Rank HLE questions by the ten candidate features selected from Experiment 1:
+
+```bash
+python experiments/rank_questions_by_feature.py \
+  --activation-dir activation_outs_hle_arc_100 \
+  --metadata-file activation_outs_hle_arc_100/metadata_rank0.jsonl \
+  --layer 22 \
+  --device cuda \
+  --dtype bfloat16 \
+  --output-dir experiment_outputs/exp1_100/top_questions
+```
+
+The default feature IDs are `2548`, `11089`, `14847`, `36468`, `36484`,
+`57138`, `66188`, `69504`, `106542`, and `121471`. Override them by repeating
+`--feature-id`. The output JSON and CSV contain the ten strongest HLE questions
+for each feature, their final-token activations, question metadata, exact prompt
+text, and activation paths.
+
+## Token analysis for the top questions of one feature
+
+Feature `2548` is the default because its top questions form a relatively
+coherent advanced-mathematics/theoretical-physics cluster. Run Experiment 2 on
+its five strongest questions with:
+
+```bash
+python experiments/analyze_top_questions_tokens.py \
+  --ranked-json experiment_outputs/exp1_100/top_questions/top_hle_questions_by_feature.json \
+  --feature-id 2548 \
+  --top-k-questions 5 \
+  --top-k-tokens 20 \
+  --activation-dir activation_outs_hle_arc_100 \
+  --device cuda \
+  --dtype bfloat16 \
+  --output-dir experiment_outputs/exp2/feature_2548_top5
+```
+
+The script loads the SAE once and writes combined token rankings for all five
+questions to `token_feature_rankings.csv` and `token_feature_rankings.json`.
+Tokens whose selected-feature activation is zero are omitted.

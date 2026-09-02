@@ -125,13 +125,42 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--hle-name",
+        "--target-name",
+        dest="hle_name",
         default="hle",
-        help="Normalized dataset name used for HLE metadata records.",
+        help="Normalized dataset name used for target metadata records.",
     )
     parser.add_argument(
         "--arc-name",
+        "--control-name",
+        dest="arc_name",
         default="arc_easy",
-        help="Normalized dataset name used for ARC metadata records.",
+        help="Normalized dataset name used for control metadata records.",
+    )
+    parser.add_argument(
+        "--target-min-prevalence",
+        type=float,
+        help=(
+            "Optional contrast filter: require HLE/target prevalence to be at "
+            "least this value."
+        ),
+    )
+    parser.add_argument(
+        "--control-max-prevalence",
+        type=float,
+        help=(
+            "Optional contrast filter: require ARC/control prevalence to be at "
+            "most this value."
+        ),
+    )
+    parser.add_argument(
+        "--contrast-min-mean-difference",
+        type=float,
+        default=0.0,
+        help=(
+            "For the optional contrast filter, require target mean minus "
+            "control mean to exceed this value."
+        ),
     )
     return parser.parse_args()
 
@@ -143,6 +172,17 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--top-k must be at least 1.")
     if not 0 <= args.min_prevalence <= 1:
         raise ValueError("--min-prevalence must be between 0 and 1.")
+    contrast_values = (
+        args.target_min_prevalence,
+        args.control_max_prevalence,
+    )
+    if any(value is not None for value in contrast_values):
+        if any(value is None for value in contrast_values):
+            raise ValueError(
+                "Use --target-min-prevalence and --control-max-prevalence together."
+            )
+        if not all(0 <= value <= 1 for value in contrast_values):
+            raise ValueError("Contrast prevalence thresholds must be between 0 and 1.")
     if not args.metadata_file.exists():
         raise FileNotFoundError(f"Metadata file not found: {args.metadata_file}")
 
@@ -248,6 +288,61 @@ def write_feature_stats(
             )
 
 
+def write_contrast_stats(
+    path: Path,
+    *,
+    feature_ids: list[int],
+    target_mean: torch.Tensor,
+    target_std: torch.Tensor,
+    target_prevalence: torch.Tensor,
+    control_mean: torch.Tensor,
+    control_std: torch.Tensor,
+    control_prevalence: torch.Tensor,
+) -> None:
+    mean_difference = target_mean - control_mean
+    prevalence_difference = target_prevalence - control_prevalence
+    effect_size = standardized_difference(
+        target_mean, target_std, control_mean, control_std
+    )
+    feature_ids = sorted(
+        feature_ids,
+        key=lambda feature_id: (
+            prevalence_difference[feature_id].item(),
+            mean_difference[feature_id].item(),
+        ),
+        reverse=True,
+    )
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(
+            [
+                "rank",
+                "feature_id",
+                "target_mean",
+                "control_mean",
+                "mean_difference_target_minus_control",
+                "standardized_difference",
+                "target_prevalence",
+                "control_prevalence",
+                "prevalence_difference_target_minus_control",
+            ]
+        )
+        for rank, feature_id in enumerate(feature_ids, start=1):
+            writer.writerow(
+                [
+                    rank,
+                    feature_id,
+                    target_mean[feature_id].item(),
+                    control_mean[feature_id].item(),
+                    mean_difference[feature_id].item(),
+                    effect_size[feature_id].item(),
+                    target_prevalence[feature_id].item(),
+                    control_prevalence[feature_id].item(),
+                    prevalence_difference[feature_id].item(),
+                ]
+            )
+
+
 def main() -> None:
     args = parse_args()
     validate_args(args)
@@ -308,6 +403,18 @@ def main() -> None:
         "arc_minus_hle": sorted(arc_features - hle_features),
         "intersection": sorted(hle_features & arc_features),
     }
+    if args.target_min_prevalence is not None:
+        contrast_mask = (
+            (hle_prevalence >= args.target_min_prevalence)
+            & (arc_prevalence <= args.control_max_prevalence)
+            & (
+                (hle_mean - arc_mean)
+                > args.contrast_min_mean_difference
+            )
+        )
+        feature_sets["target_high_control_low"] = torch.nonzero(
+            contrast_mask, as_tuple=False
+        ).flatten().tolist()
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     (args.output_dir / "feature_sets.json").write_text(
@@ -323,6 +430,17 @@ def main() -> None:
         arc_prevalence=arc_prevalence,
         top_k=min(args.top_k, hle_mean.numel()),
     )
+    if "target_high_control_low" in feature_sets:
+        write_contrast_stats(
+            args.output_dir / "contrast_feature_stats.csv",
+            feature_ids=feature_sets["target_high_control_low"],
+            target_mean=hle_mean,
+            target_std=hle_std,
+            target_prevalence=hle_prevalence,
+            control_mean=arc_mean,
+            control_std=arc_std,
+            control_prevalence=arc_prevalence,
+        )
     torch.save(
         {
             "hle_mean": hle_mean.float(),
@@ -331,6 +449,14 @@ def main() -> None:
             "arc_mean": arc_mean.float(),
             "arc_std": arc_std.float(),
             "arc_prevalence": arc_prevalence.float(),
+            "target_name": args.hle_name,
+            "control_name": args.arc_name,
+            "target_mean": hle_mean.float(),
+            "target_std": hle_std.float(),
+            "target_prevalence": hle_prevalence.float(),
+            "control_mean": arc_mean.float(),
+            "control_std": arc_std.float(),
+            "control_prevalence": arc_prevalence.float(),
         },
         args.output_dir / "feature_statistics.pt",
     )
@@ -342,6 +468,15 @@ def main() -> None:
         "activation_threshold": args.activation_threshold,
         "min_mean": args.min_mean,
         "min_prevalence": args.min_prevalence,
+        "target_dataset": args.hle_name,
+        "control_dataset": args.arc_name,
+        "target_min_prevalence": args.target_min_prevalence,
+        "control_max_prevalence": args.control_max_prevalence,
+        "contrast_min_mean_difference": args.contrast_min_mean_difference,
+        "target_questions": hle_moments.count,
+        "control_questions": arc_moments.count,
+        "missing_target_files": hle_missing,
+        "missing_control_files": arc_missing,
         "hle_questions": hle_moments.count,
         "arc_questions": arc_moments.count,
         "missing_hle_files": hle_missing,

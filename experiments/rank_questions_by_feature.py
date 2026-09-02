@@ -75,6 +75,19 @@ def parse_args() -> argparse.Namespace:
             f"the requested defaults: {','.join(map(str, DEFAULT_FEATURE_IDS))}."
         ),
     )
+    parser.add_argument(
+        "--feature-file",
+        type=Path,
+        help=(
+            "JSON file containing feature IDs, either as a list or under "
+            "--feature-set-key. Overrides the built-in defaults."
+        ),
+    )
+    parser.add_argument(
+        "--feature-set-key",
+        default="target_high_control_low",
+        help="Object key to read from --feature-file.",
+    )
     parser.add_argument("--dataset", default="hle")
     parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument(
@@ -88,6 +101,11 @@ def parse_args() -> argparse.Namespace:
         "--output-dir",
         type=Path,
         default=Path("experiment_outputs/exp1_100/top_questions"),
+    )
+    parser.add_argument(
+        "--output-prefix",
+        default="top_hle_questions_by_feature",
+        help="Filename prefix for the JSON and CSV reports.",
     )
     parser.add_argument(
         "--device", default="cuda" if torch.cuda.is_available() else "cpu"
@@ -107,9 +125,34 @@ def validate_args(args: argparse.Namespace) -> None:
         raise ValueError("--batch-size must be at least 1.")
     if args.top_k < 1:
         raise ValueError("--top-k must be at least 1.")
-    feature_ids = args.feature_id or list(DEFAULT_FEATURE_IDS)
+    if args.feature_id and args.feature_file:
+        raise ValueError("Use either --feature-id or --feature-file, not both.")
+    if args.feature_file and not args.feature_file.exists():
+        raise FileNotFoundError(f"Feature file not found: {args.feature_file}")
+
+
+def selected_feature_ids(args: argparse.Namespace) -> list[int]:
+    if args.feature_file:
+        payload = json.loads(args.feature_file.read_text(encoding="utf-8"))
+        if isinstance(payload, dict):
+            if args.feature_set_key not in payload:
+                raise KeyError(
+                    f"Feature set {args.feature_set_key!r} not found in "
+                    f"{args.feature_file}."
+                )
+            payload = payload[args.feature_set_key]
+        if not isinstance(payload, list):
+            raise TypeError("Selected feature JSON value must be a list.")
+        feature_ids = [int(value) for value in payload]
+    else:
+        feature_ids = list(args.feature_id or DEFAULT_FEATURE_IDS)
+
+    feature_ids = list(dict.fromkeys(feature_ids))
+    if not feature_ids:
+        raise ValueError("No feature IDs were selected.")
     if min(feature_ids) < 0:
-        raise ValueError("--feature-id cannot be negative.")
+        raise ValueError("Feature IDs cannot be negative.")
+    return feature_ids
 
 
 def load_question_records(
@@ -277,7 +320,7 @@ def main() -> None:
     args = parse_args()
     validate_args(args)
     logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
-    feature_ids = list(dict.fromkeys(args.feature_id or DEFAULT_FEATURE_IDS))
+    feature_ids = selected_feature_ids(args)
 
     records = load_question_records(
         args.metadata_file,
@@ -311,8 +354,8 @@ def main() -> None:
     )
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    json_path = args.output_dir / "top_hle_questions_by_feature.json"
-    csv_path = args.output_dir / "top_hle_questions_by_feature.csv"
+    json_path = args.output_dir / f"{args.output_prefix}.json"
+    csv_path = args.output_dir / f"{args.output_prefix}.csv"
     report = {
         "configuration": {
             "dataset": normalize_dataset_name(args.dataset),

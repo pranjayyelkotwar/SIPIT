@@ -4,13 +4,21 @@ from collections.abc import Sequence
 
 from torch.utils.data import ConcatDataset, Dataset
 
-from .questions import ARCEasyDataset, HLEDataset, MMLUDataset
+from .questions import (
+    ARCEasyDataset,
+    HLEDataset,
+    HLEMathShortAnswerDataset,
+    HLENonMathShortAnswerDataset,
+    MMLUDataset,
+)
 
 
 REGISTRY = {
     "arc_easy": ARCEasyDataset,
     "mmlu": MMLUDataset,
     "hle": HLEDataset,
+    "hle_math_short_answer": HLEMathShortAnswerDataset,
+    "hle_non_math_short_answer": HLENonMathShortAnswerDataset,
 }
 
 
@@ -35,6 +43,9 @@ def build_combined_question_dataset(
     add_bos_token: bool = True,
     include_choices: bool = True,
     num_samples: dict[str, int] | None = None,
+    shuffle: bool = False,
+    seed: int = 42,
+    prompt_suffix: str | None = None,
 ) -> CombinedQuestionDataset:
     unknown = set(dataset_names) - set(REGISTRY)
     if unknown:
@@ -46,6 +57,9 @@ def build_combined_question_dataset(
             add_bos_token=add_bos_token,
             include_choices=include_choices,
             num_samples=(num_samples or {}).get(name),
+            shuffle=shuffle,
+            seed=seed,
+            prompt_suffix=prompt_suffix,
         )
         for name in dataset_names
     ]
