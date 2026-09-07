@@ -1,6 +1,42 @@
 # SAE experiments
 
-These scripts reuse the residual-stream captures produced by
+## End-to-end SAE reconstruction quality
+
+`evaluate_sae_reconstruction.py` compares ordinary greedy generation with a
+LlamaScope SAE round trip at residual-stream layer 22. The intervention remains
+active for the prompt prefill and every autoregressive decode step. It also
+teacher-forces the clean continuation through both paths, which makes the logit
+KL, top-1 agreement, and NLL change comparable even after the two free-running
+generations diverge.
+
+The default input is a fixed set of five diverse prompts designed to elicit
+two- or three-sentence responses:
+
+```bash
+python experiments/evaluate_sae_reconstruction.py \
+  --model meta-llama/Llama-3.1-8B \
+  --layer 22 \
+  --sae-release llama_scope_lxr_32x \
+  --sae-width 32x \
+  --dtype bfloat16 \
+  --max-new-tokens 64 \
+  --output-dir sae_reconstruction_results
+```
+
+Pass a different JSON prompt set with `--prompts-file`. The outputs are
+`results.json`, `results.csv`, and a short `report.md`.
+
+This is a fidelity experiment: the primary reference is the clean model's
+continuation. Strong reconstruction means high activation cosine/explained
+variance, low relative L2 error, low teacher-forced KL and NLL increase, and
+high token/top-1 agreement.
+
+Layer 22 follows this repository's Hugging Face convention: hidden-state tuple
+index 22, i.e. the residual-post output of zero-based decoder block 21. The
+model and SAE must match; using a LlamaScope base-model SAE with an instruct
+checkpoint would measure both SAE reconstruction and checkpoint mismatch.
+
+The feature-analysis scripts below reuse the residual-stream captures produced by
 `activation_capture/capture_activations.py` and the LlamaScope loader in
 `evolutionary search/llamascope.py`. They do not load the language model or
 download the question datasets again.

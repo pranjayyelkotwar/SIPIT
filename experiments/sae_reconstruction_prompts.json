@@ -1,0 +1,30 @@
+{
+  "description": "Five diverse prompts designed to elicit short multi-sentence responses for SAE reconstruction testing.",
+  "prompts": [
+    {
+      "id": "seasons-explanation",
+      "category": "science",
+      "prompt": "Explain why Earth has seasons to a curious twelve-year-old. Respond in exactly two sentences, and make clear why Earth's distance from the Sun is not the main cause."
+    },
+    {
+      "id": "correlation-causation",
+      "category": "reasoning",
+      "prompt": "Explain the difference between correlation and causation using one original everyday example. Keep the response to two sentences."
+    },
+    {
+      "id": "python-default-argument",
+      "category": "programming",
+      "prompt": "A Python function defined as `def add_item(item, items=[]): items.append(item); return items` appears to remember values between calls. In two sentences, explain why this happens and give the standard fix."
+    },
+    {
+      "id": "missed-deadlines",
+      "category": "practical-analysis",
+      "prompt": "A small team repeatedly misses deadlines because work starts before responsibilities and dependencies are clear. Give a two-sentence diagnosis and recommend one concrete change to their planning process."
+    },
+    {
+      "id": "congestion-pricing",
+      "category": "balanced-argument",
+      "prompt": "Present the strongest argument for and against congestion pricing in crowded cities, then give a balanced recommendation. Use exactly three concise sentences."
+    }
+  ]
+}

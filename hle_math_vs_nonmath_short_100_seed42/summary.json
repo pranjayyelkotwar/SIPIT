@@ -1,0 +1,30 @@
+{
+  "sae_release": "llama_scope_lxr_32x",
+  "sae_id": "l22r_32x",
+  "layer": 22,
+  "token_position": -1,
+  "activation_threshold": 0.0,
+  "min_mean": 0.0,
+  "min_prevalence": 0.1,
+  "target_dataset": "hle_math_short_answer",
+  "control_dataset": "hle_non_math_short_answer",
+  "target_min_prevalence": 0.3,
+  "control_max_prevalence": 0.05,
+  "contrast_min_mean_difference": 0.0,
+  "target_questions": 100,
+  "control_questions": 100,
+  "missing_target_files": 0,
+  "missing_control_files": 0,
+  "hle_questions": 100,
+  "arc_questions": 100,
+  "missing_hle_files": 0,
+  "missing_arc_files": 0,
+  "set_sizes": {
+    "hle": 36,
+    "arc": 31,
+    "hle_minus_arc": 12,
+    "arc_minus_hle": 7,
+    "intersection": 24,
+    "target_high_control_low": 3
+  }
+}
